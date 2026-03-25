@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tourist Service Finder</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #results div { border: 1px solid #ccc; margin: 5px; padding: 10px; }
+        #map { height: 400px; width: 100%; display: none; margin-top: 10px; }
+    </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+</head>
+<body>
+    <h2>Find Services Near You</h2>
+    <input id="location" placeholder="Enter city"/>
+    <input id="service" placeholder="Enter service (Hospital, Hotel, etc.)"/>
+    <button onclick="search()">Search</button>
+
+    <div id="results"></div>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        let map;
+        function search() {
+            let location = document.getElementById("location").value;
+            let service = document.getElementById("service").value;
+            if(!location || !service) {
+                alert("Enter both location and service");
+                return;
+            }
+
+            fetch(`/search?location=${encodeURIComponent(location)}&service=${encodeURIComponent(service)}`)
+                .then(res => res.json())
+                .then(data => {
+                    let resultsDiv = document.getElementById("results");
+                    resultsDiv.innerHTML = "";
+                    if(data.length === 0){
+                        resultsDiv.innerHTML = "<p>No services found</p>";
+                        return;
+                    }
+
+                    data.forEach(item => {
+                        let div = document.createElement("div");
+                        div.innerHTML = `
+                            <strong>${item.name}</strong> (${item.service_type})<br>
+                            Phone: <a href="tel:${item.phone}">${item.phone}</a> |
+                            <a href="#" onclick="showMap(${item.lat},${item.lon}, '${item.name}')">Directions</a>
+                        `;
+                        resultsDiv.appendChild(div);
+                    });
+                });
+        }
+
+        function showMap(lat, lon, name) {
+            document.getElementById("map").style.display = "block";
+            if(!map) {
+                map = L.map('map').setView([lat, lon], 15);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+            } else {
+                map.setView([lat, lon], 15);
+            }
+            L.marker([lat, lon]).addTo(map).bindPopup(name).openPopup();
+        }
+    </script>
+</body>
+</html>
