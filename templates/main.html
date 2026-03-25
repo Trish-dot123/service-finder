@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Service Finder</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<header>
+    <h1>🌍 Service Finder</h1>
+    <button id="aiBtn" title="Ask Trish AI">🤖</button>
+</header>
+
+<!-- AI Panel (hidden until AI button clicked) -->
+<div id="aiPanel" class="hidden">
+    <h2>Trish AI Assistant</h2>
+    <form action="{{ url_for('ai') }}" method="get">
+        <input type="text" name="question" placeholder="Ask Trish anything..." required>
+        <button>Ask</button>
+    </form>
+    <div id="aiResults">
+        {% if page_type == "ai" %}
+            {% for r in results %}
+            <div class="ai-bubble">
+                <p>{{ r['name'] }}</p>
+                {% if r['type'] %}<p><strong>Type:</strong> {{ r['type'] }}</p>{% endif %}
+                {% if r['location'] %}<p><strong>Location:</strong> {{ r['location'] }}</p>{% endif %}
+                {% if r['rating'] %}<p>⭐ {{ r['rating'] }}</p>{% endif %}
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+{% if page_type == "home" %}
+<div class="search-container">
+    <form action="{{ url_for('search') }}" method="get">
+        <input type="text" name="location" placeholder="Location (e.g., Kampala)" required>
+        <input type="text" name="service" placeholder="Service type (hospital, hotel, ATM...)" required>
+        <button>Search</button>
+    </form>
+</div>
+
+{% elif page_type == "search" %}
+<h2>Search Results</h2>
+<div class="results-grid">
+{% for r in results %}
+<div class="service-card">
+    <h3>{{ r['name'] }}</h3>
+    <p>Type: {{ r['type'] }}</p>
+    <p>Location: {{ r['location'] }}</p>
+    <p>⭐ Rating: {{ r['rating'] }}</p>
+    <div class="card-actions">
+        <a href="https://www.google.com/maps?q={{ r['latitude'] }},{{ r['longitude'] }}" target="_blank">📍 Directions</a>
+        <a href="tel:{{ r['phone'] }}">📞 Call</a>
+        <a href="https://wa.me/{{ r['whatsapp'] }}" target="_blank">💬 WhatsApp</a>
+    </div>
+</div>
+{% endfor %}
+</div>
+<a class="back-link" href="{{ url_for('home') }}">← Back</a>
+{% endif %}
+
+<script>
+const aiBtn = document.getElementById('aiBtn');
+const aiPanel = document.getElementById('aiPanel');
+
+aiBtn.addEventListener('click', () => {
+    aiPanel.classList.toggle('hidden');
+});
+</script>
+
+</body>
+</html>
